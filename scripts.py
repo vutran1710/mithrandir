@@ -15,9 +15,9 @@ def test() -> None:
             "--maxfail=1",
             "--verbose",
             "-s",
-            "--fulltrace",
-            "--cov-report",
-            "html",
-            "--cov=pyrate_limiter",
+            # "--fulltrace",
+            # "--cov-report",
+            # "html",
+            # "--cov=pyrate_limiter",
         ]
     )
