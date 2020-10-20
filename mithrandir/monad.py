@@ -1,17 +1,21 @@
-from typing import Union, Callable
+from typing import Callable
 import asyncio
 from functools import reduce
-import operator
 from enum import Enum
-from copy import copy
-from pydantic import BaseModel, ValidationError
+
+
+def Validator(some_type):
+    def wrapped(data):
+        if not isinstance(data, some_type):
+            raise TypeError("Invalid type > ", data, "not equals", some_type)
+        return data
+
+    return wrapped
 
 
 class MonadSignatures(Enum):
+    RESOLVE = "resolve"
     UNWRAP = "unwrap"
-    MAP = "map"
-    FILTER = "filter"
-    REDUCE = "reduce"
 
 
 class Monad:
@@ -33,6 +37,12 @@ class Monad:
 
     def unwrap(self):
         return self.__d
+
+    def __or__(self, func):
+        if isinstance(func, MonadSignatures):
+            result = getattr(self, func.value)()
+            return result
+        return self.map(func)
 
     def __str__(self):
         return f"{self.__d}"
@@ -59,31 +69,38 @@ class Monad:
             data = func(self.__d)
             model = kwargs.get("model")
             self.__confirm(data, model)
-            
+
         result = Monad(data, cb=cb)
         return result
 
     def map(self, func: Callable, model=None):
         is_coro = asyncio.iscoroutinefunction(func)
+
         def sf(x):
             return [func(d) for d in x]
+
         async def asf(x):
             return [await func(d) for d in x]
-        
+
         return self.bind(asf if is_coro else sf, model=model)
 
     def filter(self, func: Callable, model=None):
         is_coro = asyncio.iscoroutinefunction(func)
+
         def sf(x):
             return [d for d in x if func(d)]
+
         async def asf(x):
             return [d for d in x if await func(d)]
-        
+
         return self.bind(asf if is_coro else sf, model=model)
-    
+
     def reduce(self, func, default=None, model=None):
         """not supporting coroutine"""
-        fn = lambda x: reduce(func, x, default)
+
+        def fn(x):
+            return reduce(func, x, default)
+
         return self.bind(fn, model=model)
 
     async def resolve(self):
@@ -103,4 +120,3 @@ class Monad:
         result = Monad(data, cb=cb)
         result = await result.resolve()
         return result
-        
