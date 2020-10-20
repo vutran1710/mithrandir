@@ -26,9 +26,6 @@ class Monad:
     def __str__(self):
         return f"{self.__d}"
 
-    # def __add__(self, obj):
-    #     return self.add(obj)
-
     def add(self, obj):
         if isinstance(obj, list):
             return Monad(self.__d + obj)
@@ -38,12 +35,6 @@ class Monad:
             return Monad(self.__d + data)
 
         return Monad(self.__d + [obj])
-
-    # def __or__(self, arg: Union[Callable, MonadSignatures]):
-    #     """Operator overloading"""
-    #     if isinstance(arg, MonadSignatures):
-    #         return getattr(self, arg.value)
-    #     return self.bind(arg)
 
     def bind(self, func: Callable):
         data = func(self.__d)
@@ -60,38 +51,3 @@ class Monad:
     def reduce(self, func, default):
         data = reduce(func, self.__d, default)
         return Monad(data)
-
-    # def __register__(self, sig: str, *args):
-    #     self.callbacks.put((sig, *args))
-
-    # # def reduce(self, func: Callable, default=None):
-    # #     callbacks = self.__register__("reduce", func, default)
-    # #     data = reduce(func, self.__d) if not callbacks else self.__d
-    # #     return Monad(data, callbacks=callbacks)
-
-    # async def future_resolve(self):
-    #     data = (
-    #         [await cor for cor in self.__d]
-    #         if asyncio.iscoroutine(self.head())
-    #         else self.__d
-    #     )
-    #     result = Monad(data, callbacks=self.callbacks)
-
-    #     while not result.callbacks.empty():
-    #         attr, *args = result.callbacks.get()
-    #         result = getattr(result, f"_{attr}")(*args)
-    #         if asyncio.iscoroutinefunction(args[0]):
-    #             result = await result.future_resolve()
-
-    #     return result
-
-    # def head(self):
-    #     return self.__d[0]
-
-    # def consolidate(self):
-    #     """Upon cosolidation, all callbacks will be discarded"""
-    #     return Monad([self.__d], callbacks=self.callbacks)
-
-    # def flatten(self):
-    #     """flatten nesting data"""
-    #     return Monad(self.__d[0], callbacks=self.callbacks)
