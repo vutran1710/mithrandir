@@ -2,9 +2,9 @@ from subprocess import check_call
 
 
 def lint() -> None:
-    check_call(["flake8", "pyrate_limiter/"])
-    check_call(["pylint", "pyrate_limiter/", "--rcfile=setup.cfg"])
-    check_call(["autopep8", "pyrate_limiter/*.py"])
+    check_call(["flake8", "mithrandir/"])
+    check_call(["pylint", "mithrandir/", "--rcfile=setup.cfg"])
+    check_call(["autopep8", "mithrandir/*.py"])
 
 
 def test() -> None:
@@ -16,8 +16,8 @@ def test() -> None:
             "--verbose",
             "-s",
             # "--fulltrace",
-            # "--cov-report",
-            # "html",
-            # "--cov=pyrate_limiter",
+            "--cov-report",
+            "html",
+            "--cov=mithrandir",
         ]
     )

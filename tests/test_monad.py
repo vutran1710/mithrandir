@@ -77,41 +77,9 @@ async def test_01():
         .map(multiply_by_2) \
         .filter(only_more_than_15) \
         .bind(int_to_range) \
-        .reduce(gather_to_set, set())
+        .reduce(gather_to_set, default=set())
 
     print(data)
     assert len(data.unwrap()) == 1
     assert len(data.unwrap()) == 1
     assert isinstance(data.unwrap()[0], set)
-
-    # res |= inc_by_2
-    # print(res)
-    # assert res.unwrap() == [10, 5, 7]
-
-    # # sync-chain of multi synchronous binds
-    # chained = res | inc_by_2 | multiply_by_2
-    # print(chained)
-    # assert chained.unwrap() == [24, 14, 18]
-    # # using monad-signature
-    # unwrapped_chain_result = res | inc_by_2 | multiply_by_2 | Sig.UNWRAP
-    # assert unwrapped_chain_result == [24, 14, 18]
-    # # filter
-    # chained ^= only_more_than_15
-    # print(chained)
-    # assert chained.unwrap() == [24]
-
-    # unwrapped_chain_result = (
-    #     # fmt off
-    #     res
-    #     | Sig.MAP(inc_by_2)
-    #     | Sig.MAP(multiply_by_2)
-    #     | Sig.MAP(only_more_than_15)
-    #     | Sig.UNWRAP
-    # )
-    # assert unwrapped_chain_result == [24]
-    # # original monad remain untouched
-    # assert res.unwrap() == [10, 5, 7]
-
-    # assert isinstance(res, Monad)
-    # print(res.unwrap())
-    # assert res.head() == 5
