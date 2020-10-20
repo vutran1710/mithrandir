@@ -43,14 +43,16 @@ async def test_01():
     assert res.unwrap() == [8, 3, 5]
     
     data = res \
-        .map(inc_by_2)
+        .map(inc_by_2) \
+        .sync_resolve()
     
     print(data)
     assert data.unwrap() == [10, 5, 7]
 
     data = res \
         .map(inc_by_2) \
-        .map(multiply_by_2)
+        .map(multiply_by_2) \
+        .sync_resolve()
     
     print(data)
     assert data.unwrap() == [20, 10, 14]
@@ -58,7 +60,8 @@ async def test_01():
     data = res \
         .map(inc_by_2) \
         .map(multiply_by_2) \
-        .filter(only_more_than_15)
+        .filter(only_more_than_15) \
+        .sync_resolve()
     
     print(data)
     assert data.unwrap() == [20]
@@ -67,7 +70,8 @@ async def test_01():
         .map(inc_by_2) \
         .map(multiply_by_2) \
         .filter(only_more_than_15) \
-        .bind(int_to_range)
+        .bind(int_to_range) \
+        .sync_resolve()
 
     print(data)
     assert len(data.unwrap()) == 20
@@ -77,7 +81,8 @@ async def test_01():
         .map(multiply_by_2) \
         .filter(only_more_than_15) \
         .bind(int_to_range) \
-        .reduce(gather_to_set, default=set())
+        .reduce(gather_to_set, default=set()) \
+        .sync_resolve()
 
     print(data)
     assert len(data.unwrap()) == 1

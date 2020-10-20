@@ -103,6 +103,19 @@ class Monad:
 
         return self.bind(fn, model=model)
 
+    def sync_resolve(self):
+        if not self.__cb:
+            return self
+        
+        func, kwargs = self.__cb[0]
+        cb = self.__cb[1:]
+
+        data = func(self.__d)
+        self.__confirm(data, kwargs.get("model"))
+        
+        result = Monad(data, cb=cb).sync_resolve()
+        return result
+
     async def resolve(self):
         if not self.__cb:
             return self
