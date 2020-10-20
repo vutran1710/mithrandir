@@ -1,4 +1,4 @@
-from mithrandir import __version__
+from mithrandir import __version__, Monad, MonadSignatures
 
 
 def test_version():
