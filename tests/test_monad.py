@@ -88,3 +88,18 @@ async def test_01():
     assert len(data.unwrap()) == 1
     assert len(data.unwrap()) == 1
     assert isinstance(data.unwrap()[0], set)
+
+    data = (
+        res
+        | inc_by_2
+        | multiply_by_2
+        | f.only_more_than_15
+        | b.int_to_range
+        | r.gather_to_set(default=set())
+        | Sig.RESOLVE
+    )
+    
+    print(data)
+    assert len(data.unwrap()) == 1
+    assert len(data.unwrap()) == 1
+    assert isinstance(data.unwrap()[0], set)
