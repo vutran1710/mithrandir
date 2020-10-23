@@ -1,5 +1,5 @@
 from functools import reduce, partial
-from mithrandir import __version__, Op, Monad, MonadSignatures as MonadSig
+from mithrandir import __version__, Op, Monad, MonadSignatures as Sig
 
 
 def test_version():
@@ -39,18 +39,18 @@ def test_02():
     genesis.unwrap(hello)
     list_of_ten = list(range(10))
 
-    res1 = genesis | Op.CONCAT(*list_of_ten) | MonadSig.UNWRAP
+    res1 = genesis | Op.CONCAT(*list_of_ten) | Sig.UNWRAP
 
     print(res1)
     assert len(res1) == 10
     assert not genesis.unwrap()
     assert not genesis.pending()
 
-    res2 = genesis | Op.CONCAT(*list_of_ten) | MonadSig.RESOLVE
+    res2 = genesis | Op.CONCAT(*list_of_ten) | Sig.RESOLVE
 
     print(res2)
     assert isinstance(res2, Monad)
-    assert (res2 | MonadSig.UNWRAP) == list_of_ten
+    assert (res2 | Sig.UNWRAP) == list_of_ten
 
     res3 = (
         # fmt off
@@ -62,7 +62,7 @@ def test_02():
     print(res3)
     assert isinstance(res3, Monad)
     assert res3.pending()
-    resolved = res3 | MonadSig.UNWRAP
+    resolved = res3 | Sig.UNWRAP
     print(resolved)
     assert len(resolved) == 4
 
@@ -79,7 +79,7 @@ def test_02():
         | Op.FLATTEN()
         | Op.DISTINCT(key=lambda x: x[0:9])
         | Op.SORT()
-        | MonadSig.RESOLVE
+        | Sig.RESOLVE
     )
 
     print(res4.unwrap())
