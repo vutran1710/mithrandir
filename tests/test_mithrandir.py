@@ -3,7 +3,7 @@ from mithrandir import __version__, Op, Monad, MonadSignatures as Sig
 
 
 def test_version():
-    assert __version__ == "0.1.0"
+    assert __version__ == "1.0.0"
 
 
 def multi_map_apply(items, funcs):
@@ -74,15 +74,17 @@ def test_02():
         | Op.CONCAT(*list(range(0, 200, 3)))
         | Op.MAP(lambda x: [{"val": x}])
         | Op.FILTER(lambda x: x[0]["val"] % 2 == 0)
-        | Op.FOLD(lambda v, x: {*v, f"{x[0]}__ahihi"}, set())
+        | Op.FOLD(lambda v, x: [*v, str(x[0]["val"])], [])
         | Op.MAP(list)
         | Op.FLATTEN()
-        | Op.DISTINCT(key=lambda x: x[0:9])
+        | Op.DISTINCT(key=lambda x: x[0])
+        | Op.MAP(int)
         | Op.SORT()
         | Sig.RESOLVE
     )
 
-    print(res4.unwrap())
+    expected = [0, 2, 4, 6, 8, 10, 30, 54, 72, 90]
+    assert res4.unwrap() == expected
 
 
 # def test_02():
