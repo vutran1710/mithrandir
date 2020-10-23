@@ -1,4 +1,4 @@
-from functools import reduce, partial
+from functools import partial
 from mithrandir import __version__, Op, Monad, MonadSignatures as Sig
 
 
@@ -6,33 +6,7 @@ def test_version():
     assert __version__ == "1.0.0"
 
 
-def multi_map_apply(items, funcs):
-    result = []
-    for i in items:
-        counter = 0
-        r = None
-        while funcs[counter:]:
-            r = funcs[counter:][0](i)
-            counter += 1
-        if r is not None:
-            result.append(r)
-
-    return result
-
-
 def test_01():
-    items = [1, 2, 3]
-    funcs = [str, int, str]
-    result = multi_map_apply(items, funcs)
-    assert result
-
-    items = []
-    funcs = []
-    result = multi_map_apply(items, funcs)
-    assert not result
-
-
-def test_02():
     hello = partial(print, "hello reasult")
 
     genesis = Monad()
@@ -85,34 +59,3 @@ def test_02():
 
     expected = [0, 2, 4, 6, 8, 10, 30, 54, 72, 90]
     assert res4.unwrap() == expected
-
-
-# def test_02():
-#     fchain = [(sig, f)]
-#     items = []
-#     final = []
-
-#     start = 0
-#     rem_chain = fchain[start:]
-
-#     sub_f_chain = []
-
-#     while rem_chain:
-#         sig, func = rem_chain[0]
-
-#         if len(rem_chain) < 2:
-#             # resolve...
-#             pass
-
-
-#         nextfunc = rem_chain[1]
-
-#         if sig == "Bind":
-#             final = func(final)
-
-#         if nextfunc[0] != "Bind":
-#             # note: join stack
-#             sub_f_chain.append(func)
-#         else:
-#             final = multi_map_apply(final, sub_f_chain)
-#             sub_f_chain = []
