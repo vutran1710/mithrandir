@@ -45,6 +45,9 @@ async def test_async():
         | Op.FOLD(convert_to_map, dict())
         | Op.BIND(convert_map_to_array)
         | Op.DISTINCT()
+        | Op.VALIDATE()
+        | Op.VALIDATE(model=int)
+        | Op.VALIDATE(test=lambda x: isinstance(x, int))
         | Op.FILTER(only_less_than_30)
         | Sig.RESOLVE
     )

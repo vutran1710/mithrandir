@@ -13,6 +13,7 @@ class OperatorSignatures(Enum):
     DISTINCT = "distinct"
     SORT = "sort"
     BIND = "bind"
+    VALIDATE = "validate"
 
 
 class Op:
@@ -84,3 +85,24 @@ class Op:
             return sorted(d, key=key, **kwargs)
 
         return OperatorSignatures.SORT, __, False
+
+    @staticmethod
+    def VALIDATE(test: Callable = None, model=None, failfast=True):
+        def __(d: List):
+            if not test and not model:
+                return d
+            result = []
+            for item in d:
+                test_validate, model_validate = True, True
+                if test:
+                    test_validate = test(item)
+                if model:
+                    model_validate = isinstance(item, model)
+                if not test_validate or not model_validate:
+                    if failfast:
+                        raise TypeError
+                    continue
+                result.append(item)
+            return result
+
+        return OperatorSignatures.VALIDATE, __, False

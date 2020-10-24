@@ -1,4 +1,5 @@
 from functools import partial
+import pytest
 from mithrandir import __version__, Op, Monad, MonadSignatures as Sig
 
 
@@ -64,9 +65,17 @@ def test_01():
         | Op.FLATTEN()
         | Op.DISTINCT(key=lambda x: x[0])
         | Op.MAP(int)
+        | Op.VALIDATE(model=int)
+        | Op.VALIDATE(test=lambda x: isinstance(x, int))
         | Op.SORT()
         | Sig.RESOLVE
     )
 
     expected = [0, 2, 4, 6, 8, 10, 30, 54, 72, 90]
     assert res4.unwrap() == expected
+
+    with pytest.raises(TypeError):
+        Monad(["1"]) | Op.VALIDATE(model=int) | Sig.RESOLVE
+
+    no_fail_data = Monad(["1", 2]) | Op.VALIDATE(model=int, failfast=False) | Sig.UNWRAP
+    assert no_fail_data == [2]
