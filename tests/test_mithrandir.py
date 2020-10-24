@@ -13,6 +13,12 @@ def test_01():
     genesis.unwrap(hello)
     list_of_ten = list(range(10))
 
+    res1 = genesis | Sig.UNWRAP
+    assert not res1
+
+    res1 = genesis | Sig.RESOLVE
+    assert not res1.unwrap()
+
     res1 = genesis | Op.CONCAT(*list_of_ten) | Sig.UNWRAP
 
     print(res1)
@@ -26,10 +32,15 @@ def test_01():
     assert isinstance(res2, Monad)
     assert (res2 | Sig.UNWRAP) == list_of_ten
 
+    def print_and_return(d):
+        print(d)
+        return d
+
     res3 = (
         # fmt off
         res2
         | Op.MAP(str)
+        | Op.BIND(print_and_return)
         | Op.FILTER(lambda x: int(x) > 5)
     )
 

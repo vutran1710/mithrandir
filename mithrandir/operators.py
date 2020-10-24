@@ -1,3 +1,4 @@
+from asyncio import iscoroutinefunction as is_async
 from typing import Callable, List, Any
 from functools import reduce
 from enum import Enum
@@ -18,32 +19,39 @@ class Op:
     """Operator to perform on monad-binding"""
 
     @staticmethod
+    def BIND(fn, *args, **kwargs):
+        def __(d: List[Any]):
+            return fn(d, *args, **kwargs)
+
+        return OperatorSignatures.BIND, __, is_async(fn)
+
+    @staticmethod
     def MAP(fn, *args, **kwargs):
         def __(x: Any):
             return fn(x, *args, **kwargs)
 
-        return OperatorSignatures.MAP, __
+        return OperatorSignatures.MAP, __, is_async(fn)
 
     @staticmethod
     def FILTER(fn, *args, **kwargs):
         def __(x: Any):
-            return bool(fn(x, *args, **kwargs))
+            return fn(x, *args, **kwargs)
 
-        return OperatorSignatures.FILTER, __
+        return OperatorSignatures.FILTER, __, is_async(fn)
 
     @staticmethod
     def FOLD(fn: Callable, default: Any):
         def __(d: List):
             return reduce(fn, d, default)
 
-        return OperatorSignatures.FOLD, __
+        return OperatorSignatures.FOLD, __, False
 
     @staticmethod
     def CONCAT(*args):
         def __(d: List):
             return [*d, *args]
 
-        return OperatorSignatures.CONCAT, __
+        return OperatorSignatures.CONCAT, __, False
 
     @staticmethod
     def FLATTEN():
@@ -51,7 +59,7 @@ class Op:
             result = [item for sublist in d for item in sublist]
             return result
 
-        return OperatorSignatures.FLATTEN, __
+        return OperatorSignatures.FLATTEN, __, False
 
     @staticmethod
     def DISTINCT(*, key=lambda x: x):
@@ -68,11 +76,11 @@ class Op:
 
             return result
 
-        return OperatorSignatures.DISTINCT, __
+        return OperatorSignatures.DISTINCT, __, False
 
     @staticmethod
-    def SORT(*, key=lambda x: x):
+    def SORT(*, key=lambda x: x, **kwargs):
         def __(d: List):
-            return sorted(d, key=key)
+            return sorted(d, key=key, **kwargs)
 
-        return OperatorSignatures.SORT, __
+        return OperatorSignatures.SORT, __, False
