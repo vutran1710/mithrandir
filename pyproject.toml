@@ -3,6 +3,7 @@ name = "mithrandir"
 version = "1.0.0"
 description = ""
 authors = ["vutr <me@vutr.io>"]
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.7"

@@ -32,12 +32,18 @@ async def test_async():
     def only_less_than_30(n: int):
         return n < 30
 
+    def print_and_return(d):
+        print(d)
+        return d
+
     async_monad = await (
         # fmt off
         Monad(list(range(20)))
         | Op.MAP(inc_by_2)
         | Op.FILTER(only_gt_10)
+        | Op.JOIN(Monad(-1))
         | Op.MAP(str)
+        | Op.BIND(print_and_return)
         | Op.FILTER(lambda x: "2" in x)
         | Op.SORT(reverse=True)
         | Op.MAP(to_int)

@@ -13,11 +13,20 @@ class OperatorSignatures(Enum):
     DISTINCT = "distinct"
     SORT = "sort"
     BIND = "bind"
+    JOIN = "join"
     VALIDATE = "validate"
 
 
 class Op:
     """Operator to perform on monad-binding"""
+
+    @staticmethod
+    def JOIN(another_monad):
+        def __(d: List[Any]):
+            data = another_monad.unwrap()
+            return [*d, *data]
+
+        return OperatorSignatures.JOIN, __, False
 
     @staticmethod
     def BIND(fn, *args, **kwargs):

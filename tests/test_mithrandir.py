@@ -68,10 +68,11 @@ def test_01():
         | Op.VALIDATE(model=int)
         | Op.VALIDATE(test=lambda x: isinstance(x, int))
         | Op.SORT()
+        | Op.JOIN(Monad(9999999))
         | Sig.RESOLVE
     )
 
-    expected = [0, 2, 4, 6, 8, 10, 30, 54, 72, 90]
+    expected = [0, 2, 4, 6, 8, 10, 30, 54, 72, 90, 9999999]
     assert res4.unwrap() == expected
 
     with pytest.raises(TypeError):

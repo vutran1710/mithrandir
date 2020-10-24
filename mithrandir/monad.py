@@ -67,6 +67,9 @@ class Monad:
         while cbs[cursor:]:
             sig, func, awaiting = cbs[cursor:][0]
 
+            if sig == OperatorSignatures.JOIN:
+                result = func(result)
+
             if sig == OperatorSignatures.VALIDATE:
                 result = func(result)
 
@@ -116,6 +119,9 @@ class Monad:
 
         while cbs[cursor:]:
             sig, func, _ = cbs[cursor:][0]
+
+            if sig == OperatorSignatures.JOIN:
+                result = func(result)
 
             if sig == OperatorSignatures.VALIDATE:
                 result = func(result)
