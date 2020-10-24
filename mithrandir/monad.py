@@ -1,135 +1,149 @@
 from typing import Callable
-import asyncio
-from functools import reduce
+from asyncio import gather
+from asyncio import iscoroutinefunction as is_async, iscoroutine as is_awaiting
 from enum import Enum
-
-
-def Validator(some_type):
-    def wrapped(data):
-        if not isinstance(data, some_type):
-            raise TypeError("Invalid type > ", data, "not equals", some_type)
-        return data
-
-    return wrapped
+from .operators import OperatorSignatures
 
 
 class MonadSignatures(Enum):
-    RESOLVE = "resolve"
     UNWRAP = "unwrap"
+    RESOLVE = "resolve"
 
 
 class Monad:
+    # Data
+    __d = []
+
+    # NOTE: function-chain
+    __c = []
+
+    # NOTE: async or not
+    __as = False
+
     def __init__(self, data=None, cb=None):
-        if data is None:
-            self.__d = []
-        elif isinstance(data, list):
+        if data is not None:
             self.__d = data
-        else:
-            self.__d = [data]
+            if not isinstance(data, list):
+                self.__d = [data]
 
-        self.__cb = [] if not cb else cb
+        self.__c = [] if not cb else cb
 
-    def __confirm(self, data, model):
-        if model and data:
-            for nth in data:
-                if not isinstance(nth, model):
-                    raise TypeError("data_type=", type(nth), "model_type=", model)
+    def pending(self):
+        return self.__c
 
-    def unwrap(self):
-        return self.__d
+    def __or__(self, args):
+        """Operator-overloading for binding"""
+        if isinstance(args, MonadSignatures):
+            attr = f"async_{args.value}" if self.__as else args.value
+            return getattr(self, attr)()
 
-    def __or__(self, func):
-        if isinstance(func, MonadSignatures):
-            result = getattr(self, func.value)()
-            return result
-        return self.map(func)
+        next_md = Monad(data=self.__d, cb=[*self.__c, args])
+        next_md.__as = self.__as or args[2]
+        return next_md
 
     def __str__(self):
-        return f"{self.__d}"
+        return f"Monad[async={self.__as}]<{self.__d}>"
 
-    def add(self, obj):
-        if isinstance(obj, list):
-            return Monad(self.__d + obj)
+    def resolve(self):
+        """resolve all of function chain"""
+        return Monad(data=self.__resolve_chain())
 
-        if isinstance(obj, Monad):
-            data = obj.unwrap()
-            return Monad(self.__d + data)
+    async def async_resolve(self):
+        """resolve all of function chain"""
+        data = await self.__async_resolve_chain()
+        return Monad(data=data)
 
-        return Monad(self.__d + [obj])
+    def unwrap(self, callback: Callable = None):
+        """resolve and return value"""
+        if not self.__c:
+            return self.__d if not callback else callback(self.__d)
+        return self.__resolve_chain()
 
-    def bind(self, func: Callable, *args, **kwargs):
-        result = Monad([])
-        data = None
-        cb = [*self.__cb]
+    async def __async_resolve_chain(self):
+        cursor = 0
+        result = [*self.__d]
+        cbs = self.__c
 
-        if asyncio.iscoroutinefunction(func) or self.__cb:
-            cb = [*self.__cb, (func, kwargs)]
-            data = self.__d
-        else:
-            data = func(self.__d)
-            model = kwargs.get("model")
-            self.__confirm(data, model)
+        while cbs[cursor:]:
+            sig, func, awaiting = cbs[cursor:][0]
 
-        result = Monad(data, cb=cb)
+            if sig == OperatorSignatures.VALIDATE:
+                result = func(result)
+
+            if sig == OperatorSignatures.MAP:
+                result = (
+                    list(map(func, result))
+                    if not awaiting
+                    else [await func(x) for x in result]
+                )
+
+            if sig == OperatorSignatures.FILTER:
+                result = (
+                    list(filter(func, result))
+                    if not awaiting
+                    else [x for x in result if bool(await func(x))]
+                )
+
+            if sig == OperatorSignatures.CONCAT:
+                result += func(result)
+
+            if sig == OperatorSignatures.FOLD:
+                result = [func(result)] if not awaiting else [await func(result)]
+
+            if sig == OperatorSignatures.BIND:
+                result = func(result) if not awaiting else await func(result)
+
+            if sig == OperatorSignatures.FLATTEN:
+                result = func(result)
+
+            if sig == OperatorSignatures.DISTINCT:
+                result = func(result)
+
+            if sig == OperatorSignatures.SORT:
+                result = func(result)
+
+            cursor += 1
+
         return result
 
-    def map(self, func: Callable, model=None):
-        is_coro = asyncio.iscoroutinefunction(func)
+    def __resolve_chain(self):
+        cursor = 0
+        result = [*self.__d]
+        cbs = self.__c
 
-        def sf(x):
-            return [func(d) for d in x]
+        if not cbs:
+            return self.__d
 
-        async def asf(x):
-            return [await func(d) for d in x]
+        while cbs[cursor:]:
+            sig, func, _ = cbs[cursor:][0]
 
-        return self.bind(asf if is_coro else sf, model=model)
+            if sig == OperatorSignatures.VALIDATE:
+                result = func(result)
 
-    def filter(self, func: Callable, model=None):
-        is_coro = asyncio.iscoroutinefunction(func)
+            if sig == OperatorSignatures.MAP:
+                result = list(map(func, result))
 
-        def sf(x):
-            return [d for d in x if func(d)]
+            if sig == OperatorSignatures.FILTER:
+                result = list(filter(func, result))
 
-        async def asf(x):
-            return [d for d in x if await func(d)]
+            if sig == OperatorSignatures.CONCAT:
+                result += func(result)
 
-        return self.bind(asf if is_coro else sf, model=model)
+            if sig == OperatorSignatures.FOLD:
+                result = [func(result)]
 
-    def reduce(self, func, default=None, model=None):
-        """not supporting coroutine"""
+            if sig == OperatorSignatures.BIND:
+                result = func(result)
 
-        def fn(x):
-            return reduce(func, x, default)
+            if sig == OperatorSignatures.FLATTEN:
+                result = func(result)
 
-        return self.bind(fn, model=model)
+            if sig == OperatorSignatures.DISTINCT:
+                result = func(result)
 
-    def sync_resolve(self):
-        if not self.__cb:
-            return self
-        
-        func, kwargs = self.__cb[0]
-        cb = self.__cb[1:]
+            if sig == OperatorSignatures.SORT:
+                result = func(result)
 
-        data = func(self.__d)
-        self.__confirm(data, kwargs.get("model"))
-        
-        result = Monad(data, cb=cb).sync_resolve()
-        return result
+            cursor += 1
 
-    async def resolve(self):
-        if not self.__cb:
-            return self
-
-        func, kwargs = self.__cb[0]
-        cb = self.__cb[1:]
-
-        data = self.__d
-        if asyncio.iscoroutinefunction(func):
-            data = await func(data)
-        else:
-            data = func(data)
-
-        self.__confirm(data, kwargs.get("model"))
-        result = Monad(data, cb=cb)
-        result = await result.resolve()
         return result
