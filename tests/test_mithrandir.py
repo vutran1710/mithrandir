@@ -4,7 +4,7 @@ from mithrandir import __version__, Op, Monad, MonadSignatures as Sig
 
 
 def test_version():
-    assert __version__ == "1.1.0"
+    assert __version__ == "1.1.1"
 
 
 def test_01():
