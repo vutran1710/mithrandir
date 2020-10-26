@@ -107,11 +107,11 @@ class Op:
                     test_validate = test(item)
                 if model:
                     model_validate = isinstance(item, model)
-                if not test_validate or not model_validate:
-                    if failfast:
-                        raise TypeError
+                if test_validate and model_validate:
+                    result.append(item)
                     continue
-                result.append(item)
+                if failfast:
+                    raise TypeError
             return result
 
         return OperatorSignatures.VALIDATE, __, False
