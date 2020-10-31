@@ -1,6 +1,4 @@
 from typing import Callable
-from asyncio import gather
-from asyncio import iscoroutinefunction as is_async, iscoroutine as is_awaiting
 from enum import Enum
 from .operators import OperatorSignatures
 
@@ -28,8 +26,13 @@ class Monad:
 
         self.__c = [] if not cb else cb
 
-    def pending(self):
-        return self.__c
+    @staticmethod
+    def from_source(data=None):
+        return Monad(data=data)
+
+    @property
+    def awaiting(self):
+        return self.__as
 
     def __or__(self, args):
         """Operator-overloading for binding"""
