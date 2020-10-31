@@ -1,5 +1,5 @@
 from asyncio import iscoroutinefunction as is_async
-from typing import Callable, List, Any
+from typing import Callable, List, Any, Union
 from functools import reduce
 from enum import Enum
 
@@ -15,6 +15,7 @@ class OperatorSignatures(Enum):
     BIND = "bind"
     JOIN = "join"
     VALIDATE = "validate"
+    EITHER = "either"
 
 
 class Op:
@@ -115,3 +116,20 @@ class Op:
             return result
 
         return OperatorSignatures.VALIDATE, __, False
+
+    @staticmethod
+    def EITHER(test: Union[Callable, Any], Truthy, Falsy):
+        def __(d: List):
+            test_result = True
+
+            if not callable(test):
+                test_result = bool(test)
+            else:
+                test_result = test(d)
+
+            if test_result:
+                return Truthy(d)
+
+            return Falsy(d)
+
+        return OperatorSignatures.EITHER, __, is_async(Truthy) or is_async(Falsy)
