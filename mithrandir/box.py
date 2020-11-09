@@ -1,13 +1,27 @@
+from enum import Enum
 from typing import Any, TypeVar, List, Union, Callable
+from asyncio import iscoroutine
 
 
 T = TypeVar("T")
 
 
-def auto_boxing(data: T) -> List[Union[T, Any]]:
+def auto_box(data: T) -> List[Union[T, Any]]:
     if isinstance(data, list):
         return data
+    if data is None:
+        return []
     return [data]
+
+
+class BoxSignal(Enum):
+    """Box available signatures"""
+
+    MAP = "map"
+    FILTER = "filter"
+    TAP = "tap"
+    APPEND = "append"
+    VALIDATE = "validate"
 
 
 class Box:
@@ -17,10 +31,23 @@ class Box:
     """
 
     def __init__(self, data: T = None):
-        self.__wrapped = auto_boxing(data)
+        self.__wrapped = auto_box(data)
 
     def unwrap(self):
         return self.__wrapped
+
+    async def effect(self, signal: BoxSignal, *args, **kwargs):
+        effected_box = getattr(self, signal.value)(*args, **kwargs)
+        try:
+            effects = effected_box.unwrap()
+
+            if effects and iscoroutine(effects[0]):
+                return Box(data=[await f for f in effects])
+
+            return effected_box
+        except Exception as err:
+            print("Effect failure > ", err)
+            return Box()
 
     def map(self, func: Callable):
         data = list(map(func, self.__wrapped))
