@@ -175,6 +175,17 @@ version = "1.4.3"
 
 [[package]]
 category = "dev"
+description = "Robust and effective logging for Python 2 and 3"
+name = "logzero"
+optional = false
+python-versions = "*"
+version = "1.6.2"
+
+[package.dependencies]
+colorama = "*"
+
+[[package]]
+category = "dev"
 description = "McCabe checker, plugin for flake8"
 name = "mccabe"
 optional = false
@@ -413,7 +424,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "jaraco.test (>=3.2.0)", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
 
 [metadata]
-content-hash = "94fe1019c99c87b5f364ab82bd3f0293e9d16c57f0bc56c8eee9c41d1e976f61"
+content-hash = "f4447aad2f3472700a045c6d25afb00b3363068116d7a7a754b4440700fae882"
 lock-version = "1.0"
 python-versions = "^3.7"
 
@@ -524,6 +535,10 @@ lazy-object-proxy = [
     {file = "lazy_object_proxy-1.4.3-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:a6ae12d08c0bf9909ce12385803a543bfe99b95fe01e752536a60af2b7797c62"},
     {file = "lazy_object_proxy-1.4.3-cp38-cp38-win32.whl", hash = "sha256:5541cada25cd173702dbd99f8e22434105456314462326f06dba3e180f203dfd"},
     {file = "lazy_object_proxy-1.4.3-cp38-cp38-win_amd64.whl", hash = "sha256:59f79fef100b09564bc2df42ea2d8d21a64fdcda64979c0fa3db7bdaabaf6239"},
+]
+logzero = [
+    {file = "logzero-1.6.2-py2.py3-none-any.whl", hash = "sha256:98621ae85280633a7f6ccc4f81278e9596c9b38666d76b1637dfb5d64894e4ed"},
+    {file = "logzero-1.6.2.tar.gz", hash = "sha256:7d1234dbdef8126b6ace4d15cf8a60418506355b2ad967e117d907026cf4f2b5"},
 ]
 mccabe = [
     {file = "mccabe-0.6.1-py2.py3-none-any.whl", hash = "sha256:ab8a6258860da4b6677da4bd2fe5dc2c659cff31b3ee4f7f5d64e79735b80d42"},

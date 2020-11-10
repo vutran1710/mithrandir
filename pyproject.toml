@@ -17,6 +17,7 @@ pytest-cov = "^2.10.1"
 pytest-asyncio = "^0.14.0"
 pydantic = "^1.6.1"
 flake8 = "^3.8.4"
+logzero = "^1.6.2"
 
 [tool.poetry.scripts]
 test = 'scripts:test'

@@ -2,6 +2,7 @@
 from enum import Enum
 from typing import TypeVar, List, Union, Callable
 from asyncio import iscoroutine
+from logging import getLogger
 
 
 T = TypeVar("T")
@@ -16,7 +17,7 @@ def auto_box(data: Union[T, List[T]]) -> List[T]:
     return [data]
 
 
-class BoxSignal(Enum):
+class BoxOp(Enum):
     """Box available signatures"""
 
     MAP = "map"
@@ -44,10 +45,10 @@ class __BasicBox__:
 class Box(__BasicBox__):
     """Box with transformer apis"""
 
-    async def effect(self, signal: BoxSignal, *args, **kwargs):
+    async def effect(self, signal: BoxOp, *args, **kwargs):
         """handle side-effects"""
-        effected_box = getattr(self, signal.value)(*args, **kwargs)
         try:
+            effected_box = getattr(self, signal.value)(*args, **kwargs)
             effects = effected_box.unwrap()
 
             if effects and iscoroutine(effects[0]):
@@ -55,8 +56,11 @@ class Box(__BasicBox__):
 
             return effected_box
         except Exception as err:
-            print("Effect failure > ", err)
-            return Box()
+            logger = getLogger(__name__)
+            logger.error("Effect failure ==============")
+            logger.error("> Err = %s", err)
+            logger.error("> Args = %s, Kwargs = %s", args, kwargs)
+            return self
 
     def map(self, func: Callable):
         data = list(map(func, self.unwrap()))

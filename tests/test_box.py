@@ -1,6 +1,10 @@
 from functools import partial
-import pytest
-from mithrandir.box import Box
+import asyncio  # noqa
+import pytest  # noqa
+import pytest_asyncio.plugin  # noqa
+from mithrandir.box import Box, BoxOp
+
+pytestmark = pytest.mark.asyncio
 
 
 def test_box():
@@ -80,3 +84,25 @@ def test_box_pure_transformer_chain():
     box3 = Box("10")
     big_box = transformed.apppend(box2, box3, model=str)
     assert big_box.unwrap() == ["6", "12", "18", "9", "10"]
+
+
+async def test_box_side_effect():
+    box = Box(1)
+
+    async def inc_by_2(x):
+        return x + 2
+
+    def mul_by_3(x):
+        return x * 3
+
+    def fail_effect(x):
+        raise Exception("DummyException")
+
+    data = await box.effect(BoxOp.MAP, inc_by_2)
+    assert data.unwrap() == [3]
+
+    data = await box.effect(BoxOp.MAP, mul_by_3)
+    assert data.unwrap() == [3]
+
+    data = await box.effect(BoxOp.MAP, fail_effect)
+    assert data.unwrap() == [1]
