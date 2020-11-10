@@ -2,6 +2,7 @@ from subprocess import check_call
 
 
 def lint() -> None:
+    check_call(["radon", "mi", "mithrandir/"])
     check_call(["black", "mithrandir/"])
     check_call(["flake8", "mithrandir/"])
     check_call(["pylint", "mithrandir/", "--rcfile=setup.cfg"])

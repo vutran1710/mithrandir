@@ -1,10 +1,15 @@
+"""Monad operators
+- a bit like observable operators
+"""
 from asyncio import iscoroutinefunction as is_async
-from typing import Callable, List, Any, Union
+from typing import Callable, List, Any
 from functools import reduce
 from enum import Enum
 
 
 class OperatorSignatures(Enum):
+    """available operators for monad"""
+
     MAP = "map"
     FILTER = "filter"
     CONCAT = "concat"

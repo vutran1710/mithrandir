@@ -81,7 +81,7 @@ class Box(SimpleBox):
 
     def peek(self, func: Callable):
         """do stuff with the whole unwrapped content"""
-        func([x for x in self.unwrap()])
+        func(self.unwrap())
         return self
 
     def join(self, *boxes: List[SimpleBox], model=None):
