@@ -73,16 +73,16 @@ def test_box_pure_transformer_chain():
     with pytest.raises(ValueError):
         box2 = Box("9")
         box3 = Box(10)
-        transformed.apppend(box2, box3)
+        transformed.join(box2, box3)
 
     box2 = Box("9")
     box3 = Box(10)
 
     with pytest.raises(AssertionError):
-        transformed.apppend(box2, box3, model=str)
+        transformed.join(box2, box3, model=str)
 
     box3 = Box("10")
-    big_box = transformed.apppend(box2, box3, model=str)
+    big_box = transformed.join(box2, box3, model=str)
     assert big_box.unwrap() == ["6", "12", "18", "9", "10"]
 
 

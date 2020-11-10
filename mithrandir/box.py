@@ -27,7 +27,7 @@ class BoxOp(Enum):
     VALIDATE = "validate"
 
 
-class __BasicBox__:
+class SimpleBox:
     """Box - a friendly term that
     makes sense to everyone instead of `Monad`
     It's like a simplified monad
@@ -42,7 +42,7 @@ class __BasicBox__:
         return self.__wrapped
 
 
-class Box(__BasicBox__):
+class Box(SimpleBox):
     """Box with transformer apis"""
 
     async def effect(self, signal: BoxOp, *args, **kwargs):
@@ -63,24 +63,29 @@ class Box(__BasicBox__):
             return self
 
     def map(self, func: Callable):
+        """mapping List[T] to List[V]"""
         data = list(map(func, self.unwrap()))
         return Box(data=data)
 
     def filter(self, pred: Callable):
+        """accept only items that pass the predicate function"""
         data = list(filter(pred, self.unwrap()))
         return Box(data=data)
 
     def tap(self, func: Callable):
+        """do stuff with every single item, like for-each"""
         for item in self.unwrap():
             func(item)
 
         return self
 
     def peek(self, func: Callable):
+        """do stuff with the whole unwrapped content"""
         func([x for x in self.unwrap()])
         return self
 
-    def apppend(self, *boxes: List[__BasicBox__], model=None):
+    def join(self, *boxes: List[SimpleBox], model=None):
+        """joining boxes together"""
         if not model:
             raise ValueError("A validation model is required!")
 
@@ -97,6 +102,7 @@ class Box(__BasicBox__):
         model: Callable = None,
         failfast=True,
     ):
+        """validating data type"""
         try:
             valid_check, valid_model = True, True
             result = []
