@@ -1,10 +1,15 @@
 from functools import partial
 import pytest
-from mithrandir import __version__, Op, Monad, MonadSignatures as Sig
+from mithrandir import (
+    __version__,
+    Op,
+    Monad,
+    MonadSignatures as Sig,
+)
 
 
 def test_version():
-    assert __version__ == "1.1.1"
+    assert __version__ == "1.2.1"
 
 
 def test_01():
@@ -25,7 +30,7 @@ def test_01():
     print(res1)
     assert len(res1) == 10
     assert not genesis.unwrap()
-    assert not genesis.pending()
+    assert not genesis.awaiting
 
     res2 = genesis | Op.CONCAT(*list_of_ten) | Sig.RESOLVE
 
@@ -47,7 +52,7 @@ def test_01():
 
     print(res3)
     assert isinstance(res3, Monad)
-    assert res3.pending()
+    assert res3.awaiting is False
     resolved = res3 | Sig.UNWRAP
     print(resolved)
     assert len(resolved) == 4

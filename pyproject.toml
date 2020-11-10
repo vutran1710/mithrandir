@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mithrandir"
-version = "1.1.1"
+version = "1.2.1"
 description = ""
 authors = ["vutr <me@vutr.io>"]
 readme = "README.md"
@@ -17,6 +17,9 @@ pytest-cov = "^2.10.1"
 pytest-asyncio = "^0.14.0"
 pydantic = "^1.6.1"
 flake8 = "^3.8.4"
+logzero = "^1.6.2"
+radon = "^4.3.2"
+flake8_polyfill = "^1.0.2"
 
 [tool.poetry.scripts]
 test = 'scripts:test'
