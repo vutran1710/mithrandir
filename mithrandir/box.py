@@ -76,7 +76,7 @@ class Box(__BasicBox__):
 
         return self
 
-    def peek(self, func):
+    def peek(self, func: Callable):
         func([x for x in self.unwrap()])
         return self
 
@@ -121,5 +121,7 @@ class Box(__BasicBox__):
             return Box(data=result)
 
         except AssertionError as err:
-            print("Validation failed >> ", err)
+            logger = getLogger(__name__)
+            logger.error("Validation failure ==============")
+            logger.error("> Model = %s, Check = %s", model, check)
             raise err

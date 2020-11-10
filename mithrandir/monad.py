@@ -26,10 +26,6 @@ class Monad:
 
         self.__c = [] if not cb else cb
 
-    @staticmethod
-    def from_source(data=None):
-        return Monad(data=data)
-
     @property
     def awaiting(self):
         return self.__as
