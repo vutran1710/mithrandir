@@ -7,11 +7,6 @@ from mithrandir import __version__, Op, Monad, MonadSignatures as Sig
 pytestmark = pytest.mark.asyncio
 
 
-@pytest.fixture(scope="function")
-async def setup():
-    pass
-
-
 async def test_async():
     async def inc_by_2(n: int):
         return n + 2

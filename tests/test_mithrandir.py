@@ -5,7 +5,6 @@ from mithrandir import (
     Op,
     Monad,
     MonadSignatures as Sig,
-    Complex,
 )
 
 
@@ -86,17 +85,3 @@ def test_01():
 
     no_fail_data = Monad(["1", 2]) | Op.VALIDATE(model=int, failfast=False) | Sig.UNWRAP
     assert no_fail_data == [2]
-
-
-def test_new_ops():
-    pipeline = (
-        # fmt: off
-        Monad(data=[2,3]) \
-        | Op.EITHER(
-            True,
-            Complex.Connectable | Op.BIND(print),
-            Complex.Connectable | Op.MAP(lambda x: x * 2),
-        )
-        | Sig.UNWRAP
-    )
-    print(pipeline)

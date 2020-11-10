@@ -16,9 +16,9 @@ def test() -> None:
             "--maxfail=1",
             "--verbose",
             "-s",
-            # "--fulltrace",
             "--cov-report",
-            "html",
-            "--cov=mithrandir",
+            "term-missing",
+            "--disable-warnings",
+            "--cov=.",
         ]
     )
