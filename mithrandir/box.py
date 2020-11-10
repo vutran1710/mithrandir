@@ -1,12 +1,14 @@
 from enum import Enum
-from typing import Any, TypeVar, List, Union, Callable
+from typing import Any, TypeVar, List, Union, Callable, NewType
 from asyncio import iscoroutine
 
 
 T = TypeVar("T")
+Boxed = NewType("Boxed", List[T])
 
 
-def auto_box(data: T) -> List[Union[T, Any]]:
+def auto_box(data: Union[T, List[T]]) -> Boxed:
+    """convert any data to Boxed Data"""
     if isinstance(data, list):
         return data
     if data is None:
@@ -30,6 +32,8 @@ class Box:
     It's like a simplified monad
     """
 
+    __wrapped: Boxed
+
     def __init__(self, data: T = None):
         self.__wrapped = auto_box(data)
 
@@ -37,6 +41,7 @@ class Box:
         return self.__wrapped
 
     async def effect(self, signal: BoxSignal, *args, **kwargs):
+        """handle side-effects"""
         effected_box = getattr(self, signal.value)(*args, **kwargs)
         try:
             effects = effected_box.unwrap()
