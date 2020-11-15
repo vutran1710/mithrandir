@@ -31,15 +31,21 @@ class Box:
         self.__pipe = pipe or []
         self.__effect = effect
 
+    def __repr__(self):
+        return f"Box<data={self.__wrapped}, pipe={self.__pipe}, effect={self.__effect}>"
+
     def unwrap(self) -> List[T]:
         return self.__wrapped
 
     def pipe(self, *func):
-        effect = next((bool(f) for f in func if asyncio.iscoroutinefunction(f)), False)
+        func_has_effect = next(
+            (bool(f) for f in func if asyncio.iscoroutinefunction(f)), False
+        )
+        effect = self.__effect or func_has_effect
         return Box(data=self.__wrapped, pipe=[*self.__pipe, *func], effect=effect)
 
     @property
-    def has_effect(self):
+    def has_effect(self) -> bool:
         return self.__effect
 
     @has_effect.setter
@@ -47,7 +53,7 @@ class Box:
         raise ValueError("this property is read-only")
 
     @property
-    def resolve(self):
+    def resolve(self) -> Callable:
         if self.__effect:
             return self.__async_resolve
         return self.__sync_resolve
