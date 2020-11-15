@@ -23,6 +23,7 @@ flake8_polyfill = "^1.0.2"
 
 [tool.poetry.scripts]
 test = 'scripts:test'
+test_box = 'scripts:test_box'
 lint = 'scripts:lint'
 
 [build-system]

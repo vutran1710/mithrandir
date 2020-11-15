@@ -23,3 +23,15 @@ def test() -> None:
             "--cov=.",
         ]
     )
+
+
+def test_box() -> None:
+    check_call(
+        [
+            "pytest",
+            "tests/test_box.py",
+            "--maxfail=1",
+            "--verbose",
+            "-s",
+        ]
+    )
