@@ -1,8 +1,8 @@
-from functools import partial
 import asyncio  # noqa
 import pytest  # noqa
 import pytest_asyncio.plugin  # noqa
-from mithrandir.box import Box, BoxOp
+from mithrandir.box import Box
+from mithrandir.op import op, compose
 
 pytestmark = pytest.mark.asyncio
 
@@ -33,6 +33,15 @@ def test_box():
     print("boxtype -->", type(my_box))
     print("boxtype --> unwraped", type(my_box.unwrap()))
 
+    with pytest.raises(ValueError):
+        my_box.resolve = 5
+
+    with pytest.raises(ValueError):
+        my_box.has_effect = 1
+
+    with pytest.raises(ValueError):
+        Box([1, "a"], validator=str)
+
 
 def test_box_pure_transformer_chain():
     box = Box(data=list(range(5)))
@@ -46,63 +55,134 @@ def test_box_pure_transformer_chain():
     def only_even(x):
         return x % 2 == 0
 
-    assert box.map(inc_by_2).map(str).unwrap() == ["2", "3", "4", "5", "6"]
-    assert box.unwrap() == [0, 1, 2, 3, 4]
+    result = box.resolve()
+    print(">>>>>>>>>", result)
 
-    transformed = (
-        box.map(inc_by_2)
-        .peek(print)
-        .map(multi_by_3)
-        .peek(print)
-        .filter(only_even)
-        .peek(print)
-        .map(str)
-        .tap(partial(print, "value is >"))
-        .validate(model=str)
-    )
+    result = box.pipe(
+        lambda x: list(map(inc_by_2, x)),
+        op.map(multi_by_3),
+        lambda x: list(filter(only_even, x)),
+    ).resolve()
 
-    assert transformed.unwrap() == ["6", "12", "18"]
-
-    assert transformed.validate(
-        check=lambda x: len(x) < 2, failfast=False
-    ).unwrap() == ["6"]
-
-    with pytest.raises(AssertionError):
-        transformed.validate(check=lambda x: len(x) < 2).unwrap()
-
-    with pytest.raises(ValueError):
-        box2 = Box("9")
-        box3 = Box(10)
-        transformed.join(box2, box3)
-
-    box2 = Box("9")
-    box3 = Box(10)
-
-    with pytest.raises(AssertionError):
-        transformed.join(box2, box3, model=str)
-
-    box3 = Box("10")
-    big_box = transformed.join(box2, box3, model=str)
-    assert big_box.unwrap() == ["6", "12", "18", "9", "10"]
+    assert result.unwrap() == [6, 12, 18]
 
 
-async def test_box_side_effect():
-    box = Box(1)
+async def test_async():
+    box = Box(data=list(range(5)))
 
     async def inc_by_2(x):
         return x + 2
 
-    def mul_by_3(x):
+    async def multi_by_3(x):
         return x * 3
 
-    def fail_effect(x):
-        raise Exception("DummyException")
+    def only_even(x):
+        return x % 2 == 0
 
-    data = await box.effect(BoxOp.MAP, inc_by_2)
-    assert data.unwrap() == [3]
+    async def greater_than_ten(x):
+        return x > 10
 
-    data = await box.effect(BoxOp.MAP, mul_by_3)
-    assert data.unwrap() == [3]
+    transform_chain = box.pipe(
+        op.map(inc_by_2),
+        op.map(multi_by_3),
+        op.filter(only_even),
+        op.filter(greater_than_ten),
+    )
 
-    data = await box.effect(BoxOp.MAP, fail_effect)
-    assert data.unwrap() == [1]
+    assert isinstance(transform_chain, Box)
+    assert transform_chain.has_effect
+
+    result = await transform_chain.resolve()
+    assert result.unwrap() == [12, 18]
+
+    folding = transform_chain.pipe(
+        op.fold(lambda a, b: a + b),
+    )
+
+    result = await folding.resolve()
+    assert result.unwrap() == [30]
+
+    async def async_sum(a, b):
+        return a + b
+
+    folding = transform_chain.pipe(op.fold(async_sum, initial=2))
+
+    assert isinstance(folding, Box)
+
+    result = await folding.resolve()
+    assert result.unwrap() == [32]
+    result = await result.pipe(op.fold(async_sum, initial=2)).resolve()
+    assert result.unwrap() == [34]
+
+    result = await transform_chain.pipe(
+        op.fold(async_sum, initial=2),
+        op.fold(async_sum, initial=2),
+    ).resolve()
+    assert result.unwrap() == [34]
+
+    result = (
+        await transform_chain.pipe(op.fold(async_sum, initial=2))
+        .pipe(op.fold(async_sum, initial=2))
+        .resolve()
+    )
+    assert result.unwrap() == [34]
+
+    assert Box().pipe(op.fold(sum)).resolve().unwrap() == []
+    assert (await Box().pipe(op.fold(async_sum)).resolve()).unwrap() == []
+
+
+async def test_switch_map():
+    from functools import partial
+
+    async def inc_by_2(x):
+        return x + 2
+
+    async def multi_by_3(x):
+        return x * 3
+
+    def only_even(x):
+        return x % 2 == 0
+
+    async def greater_than_ten(x):
+        return x > 10
+
+    box = Box(data=list(range(3)))
+
+    true_func = compose(
+        op.map(inc_by_2),
+        op.map(multi_by_3),
+    )
+
+    false_func = compose(
+        op.map(multi_by_3),
+        op.filter(only_even),
+    )
+
+    branching = op.if_else(True, true_func, false_func)
+    assert callable(branching)
+    test = await branching([1, 2])
+    assert test == [9, 12]
+
+    branching = op.if_else(False, true_func, false_func)
+    test = await branching([1, 2])
+    assert test == [6]
+
+    result = await box.pipe(
+        branching,
+        op.map(str),
+    ).resolve()
+
+    assert result.unwrap() == ["0", "6"]
+
+    result = await box.pipe(
+        op.map(multi_by_3),
+        op.map(multi_by_3),
+        op.if_else(
+            lambda x: x[0] > 0,
+            op.map(inc_by_2),
+            op.filter(greater_than_ten),
+        ),
+        op.map(str),
+    ).resolve()
+
+    assert result.unwrap() == ["18"]
