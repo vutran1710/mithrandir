@@ -1,6 +1,7 @@
 """Operation on Box"""
 from typing import Callable, List, NewType, TypeVar
 import asyncio
+from mithrandir.box import auto_box
 
 T = TypeVar("T")
 Boxed = NewType("Boxed", List[T])
@@ -43,7 +44,7 @@ class op:
             for val in item_list:
                 result = func(result, val, *args, **kwargs)
 
-            return result
+            return auto_box(result)
 
         async def _asw(d: Boxed):
             if not d:
@@ -55,6 +56,6 @@ class op:
             for val in item_list:
                 result = await func(result, val, *args, **kwargs)
 
-            return result
+            return auto_box(result)
 
         return _w if not asyncio.iscoroutinefunction(func) else _asw

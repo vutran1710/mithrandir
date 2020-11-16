@@ -108,10 +108,21 @@ async def test_async():
 
     result = await folding.resolve()
     assert result.unwrap() == [32]
+    result = await result.pipe(op.fold(async_sum, initial=2)).resolve()
+    assert result.unwrap() == [34]
 
-    with pytest.raises(Exception):
-        # re-fold will raise Error
-        await folding.pipe(op.fold(async_sum, initial=2)).resolve()
+    result = await transform_chain.pipe(
+        op.fold(async_sum, initial=2),
+        op.fold(async_sum, initial=2),
+    ).resolve()
+    assert result.unwrap() == [34]
+
+    result = (
+        await transform_chain.pipe(op.fold(async_sum, initial=2))
+        .pipe(op.fold(async_sum, initial=2))
+        .resolve()
+    )
+    assert result.unwrap() == [34]
 
     assert Box().pipe(op.fold(sum)).resolve().unwrap() == []
     assert (await Box().pipe(op.fold(async_sum)).resolve()).unwrap() == []
