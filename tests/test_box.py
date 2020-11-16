@@ -2,7 +2,7 @@ import asyncio  # noqa
 import pytest  # noqa
 import pytest_asyncio.plugin  # noqa
 from mithrandir.box import Box
-from mithrandir.op import op
+from mithrandir.op import op, compose
 
 pytestmark = pytest.mark.asyncio
 
@@ -38,6 +38,9 @@ def test_box():
 
     with pytest.raises(ValueError):
         my_box.has_effect = 1
+
+    with pytest.raises(ValueError):
+        Box([1, "a"], validator=str)
 
 
 def test_box_pure_transformer_chain():
@@ -126,3 +129,60 @@ async def test_async():
 
     assert Box().pipe(op.fold(sum)).resolve().unwrap() == []
     assert (await Box().pipe(op.fold(async_sum)).resolve()).unwrap() == []
+
+
+async def test_switch_map():
+    from functools import partial
+
+    async def inc_by_2(x):
+        return x + 2
+
+    async def multi_by_3(x):
+        return x * 3
+
+    def only_even(x):
+        return x % 2 == 0
+
+    async def greater_than_ten(x):
+        return x > 10
+
+    box = Box(data=list(range(3)))
+
+    true_func = compose(
+        op.map(inc_by_2),
+        op.map(multi_by_3),
+    )
+
+    false_func = compose(
+        op.map(multi_by_3),
+        op.filter(only_even),
+    )
+
+    branching = op.if_else(True, true_func, false_func)
+    assert callable(branching)
+    test = await branching([1, 2])
+    assert test == [9, 12]
+
+    branching = op.if_else(False, true_func, false_func)
+    test = await branching([1, 2])
+    assert test == [6]
+
+    result = await box.pipe(
+        branching,
+        op.map(str),
+    ).resolve()
+
+    assert result.unwrap() == ["0", "6"]
+
+    result = await box.pipe(
+        op.map(multi_by_3),
+        op.map(multi_by_3),
+        op.if_else(
+            lambda x: x[0] > 0,
+            op.map(inc_by_2),
+            op.filter(greater_than_ten),
+        ),
+        op.map(str),
+    ).resolve()
+
+    assert result.unwrap() == ["18"]

@@ -26,13 +26,22 @@ class Box:
         data: T = None,
         pipe: List[Callable] = None,
         effect: bool = False,
+        validator: Callable = None,
     ):
         self.__wrapped = auto_box(data)
         self.__pipe = pipe or []
         self.__effect = effect
+        if validator:
+            self.__validate_data(validator)
 
     def __repr__(self):
         return f"Box<data={self.__wrapped}, pipe={self.__pipe}, effect={self.__effect}>"
+
+    def __validate_data(self, validator: Callable):
+        for item in self.__wrapped:
+            if not isinstance(item, validator):
+                msg = f"Invalid data-type: item={item} not instance of {validator}"
+                raise ValueError(msg)
 
     def unwrap(self) -> List[T]:
         return self.__wrapped
