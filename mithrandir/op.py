@@ -31,6 +31,22 @@ class op:
         return sync_ifelse if not is_async else async_ifelse
 
     @staticmethod
+    def each(func: Callable, *args, **kwargs):
+        """for each loop, return the original result"""
+
+        def sync_each(boxed: Boxed):
+            for nth in boxed:
+                func(nth, *args, **kwargs)
+            return boxed
+
+        async def async_each(boxed: Boxed):
+            for nth in boxed:
+                await func(nth, *args, **kwargs)
+            return boxed
+
+        return sync_each if not asyncio.iscoroutinefunction(func) else async_each
+
+    @staticmethod
     def map(func: Callable, *args, **kwargs):
         """not lazy, func takes single item in Box as first param"""
 
@@ -38,11 +54,11 @@ class op:
             result = [func(i, *args, **kwargs) for i in boxed]
             return result
 
-        async def asyncmap(boxed: Boxed):
+        async def async_map(boxed: Boxed):
             result = [await func(i, *args, **kwargs) for i in boxed]
             return result
 
-        return sync_map if not asyncio.iscoroutinefunction(func) else asyncmap
+        return sync_map if not asyncio.iscoroutinefunction(func) else async_map
 
     @staticmethod
     def filter(func: Callable, *args, **kwargs):
@@ -74,7 +90,7 @@ class op:
 
             return auto_box(result)
 
-        async def asyncfold(boxed: Boxed):
+        async def async_fold(boxed: Boxed):
             if not boxed:
                 return boxed
 
@@ -86,7 +102,7 @@ class op:
 
             return auto_box(result)
 
-        return sync_fold if not asyncio.iscoroutinefunction(func) else asyncfold
+        return sync_fold if not asyncio.iscoroutinefunction(func) else async_fold
 
 
 # ====================================================================

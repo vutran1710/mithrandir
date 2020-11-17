@@ -87,6 +87,7 @@ async def test_async():
         op.map(multi_by_3),
         op.filter(only_even),
         op.filter(greater_than_ten),
+        op.each(lambda x: print(">>>>>>>>>>>>>>>> x=", x)),
     )
 
     assert isinstance(transform_chain, Box)
@@ -146,6 +147,9 @@ async def test_switch_map():
     async def greater_than_ten(x):
         return x > 10
 
+    async def ping(x):
+        print("Hello x", x)
+
     box = Box(data=list(range(3)))
 
     true_func = compose(
@@ -177,6 +181,7 @@ async def test_switch_map():
     result = await box.pipe(
         op.map(multi_by_3),
         op.map(multi_by_3),
+        op.each(ping),
         op.if_else(
             lambda x: x[0] > 0,
             op.map(inc_by_2),
